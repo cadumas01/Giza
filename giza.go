@@ -189,8 +189,12 @@ result_loop:
 	*results_p = nil
 	close(results)
 
-	g.Commit(object_id, version, metadata)
-	g.CleanUp(object_id, version)
+	// Asynchronously commit and clean up
+	go func() {
+		g.Commit(object_id, version, metadata)
+		g.CleanUp(object_id, version)
+	}()
+
 	return nil
 }
 
@@ -256,7 +260,6 @@ cas_result_loop:
 	// Retrieve the preaccepted and highest ballot values.
 	// Unlike Giza, this will require a second request because Cassandra does not
 	// read values when writing.
-	preaccepted_max := uint64(0)
 	preaccepted_max_count := -1
 	var preaccepted_max_val Metadata
 	preaccepted_counts := make(map[uint64]int)
@@ -334,7 +337,6 @@ select_result_loop:
 
 					if prev+1 > preaccepted_max_count {
 						preaccepted_max_count = prev + 1
-						preaccepted_max = preaccepted
 						preaccepted_max_val = preaccepted_value
 					}
 				}
@@ -369,14 +371,15 @@ select_result_loop:
 	var value Metadata
 	send_self := false
 
-	if highest_accepted_max > 0 { // Case 1
+	if highest_accepted_max > 0 {
+		// Case 1: accept the value with the highest accepted ballot
 		value = highest_accepted_val
 		ballot = int64(highest_accepted_max)
 	} else if preaccepted_max_count > 0 {
+		// Case 2: accept the most popular pre-accepted value
 		value = preaccepted_max_val
-		// TODO what is the ballot?
-	} else { // Case 3
-		// No real contention, send accept request
+	} else {
+		// Case 3: no real contention, send accept request with own value
 		value = metadata
 		send_self = true
 	}
@@ -422,8 +425,8 @@ cas_accept_result_loop:
 	*cas_results_p = nil
 	close(cas_results)
 
-	g.Commit(object_id, version, metadata)
-	g.CleanUp(object_id, version)
+	// Asynchronously commit
+	go g.Commit(object_id, version, metadata)
 
 	if !send_self {
 		return g.WriteFast(object_id, metadata)
