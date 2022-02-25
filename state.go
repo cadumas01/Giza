@@ -8,9 +8,6 @@ import (
 	"github.com/gocql/gocql"
 )
 
-type Metadata struct {
-}
-
 type PaxosState struct {
 	HighestBallotSeen     int64
 	HighestBallotAccepted int64
