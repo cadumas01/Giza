@@ -44,7 +44,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	err = g.WriteFast(id, m1b)
+	err = g.WriteFast(id, m1b, -1)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -58,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = g2.WriteFast(id, m2b)
+	err = g2.WriteFast(id, m2b, -1)
 	if err != nil {
 		log.Fatalln(err)
 	}
