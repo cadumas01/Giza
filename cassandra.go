@@ -21,14 +21,21 @@ func OpenCassandra(ip string) (*gocql.Session, error) {
 func CreateTable(gocql *gocql.Session) error {
 	return gocql.Query(`CREATE TABLE IF NOT EXISTS state (
 		object_id uuid,
-		version bigint,
-    value blob,
+		version int,
+		value blob,
+		committed boolean,
 		highest_ballot_seen bigint,
 		highest_ballot_accepted bigint,
 		highest_value_accepted blob,
 		preaccepted int STATIC,
 		preaccepted_value blob STATIC,
-		known_committed_versions set<bigint> STATIC,
-		highest_known_committed_versions bigint STATIC,
+		known_committed_versions set<int> STATIC,
+		highest_known_committed_version int STATIC,
 		PRIMARY KEY (object_id, version));`).Exec()
+}
+
+func CreatePeersTable(gocql *gocql.Session) error {
+	return gocql.Query(`CREATE TABLE IF NOT EXISTS peers (
+		ip string,
+		PRIMARY KEY ip;`).Exec()
 }

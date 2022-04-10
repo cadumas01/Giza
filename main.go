@@ -44,12 +44,11 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	err = g.WriteFast(id, m1b, -1)
+	err = g.WriteFast(id, m1b, 0)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	time.Sleep(5 * time.Second)
 
 	fmt.Println("Write bye")
 
@@ -58,10 +57,11 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = g2.WriteFast(id, m2b, -1)
+	err = g2.WriteFast(id, m2b, 0)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	time.Sleep(30 * time.Second)
+	g2.Flush()
+	g.Flush()
 }
