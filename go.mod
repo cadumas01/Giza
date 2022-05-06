@@ -1,4 +1,4 @@
-module github.com/pantherman594/fastpaxos
+module github.com/pantherman594/giza
 
 go 1.18
 

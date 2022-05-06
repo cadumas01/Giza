@@ -1,0 +1,6 @@
+2 PCs
+200ms artificial latency between nodes
+CASSANDRA
+
+./giza -maddr 192.168.1.1 -m cassandra -T 1 -addr 192.168.1.1 -o 20 -poisson 500000
+./giza -maddr 192.168.1.1 -m cassandra -T 1 -addr 192.168.1.2 -o 20 -poisson 500000

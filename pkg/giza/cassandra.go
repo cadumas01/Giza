@@ -1,4 +1,4 @@
-package main
+package giza
 
 import (
 	"github.com/gocql/gocql"
@@ -36,6 +36,7 @@ func CreateTable(gocql *gocql.Session) error {
 
 func CreatePeersTable(gocql *gocql.Session) error {
 	return gocql.Query(`CREATE TABLE IF NOT EXISTS peers (
-		ip string,
-		PRIMARY KEY ip;`).Exec()
+		ip inet PRIMARY KEY,
+		num_replicas int,
+		num_objects int);`).Exec()
 }

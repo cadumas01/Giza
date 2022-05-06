@@ -1,0 +1,5 @@
+2 PCs
+200ms artificial latency between nodes
+
+./giza -maddr 192.168.1.1 -n 2 -T 4 -addr 192.168.1.1 -o 1 -poisson 50000
+./giza -maddr 192.168.1.1 -n 2 -T 4 -addr 192.168.1.2 -o 1 -poisson 50000

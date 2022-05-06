@@ -1,15 +1,15 @@
-package main
+package giza
 
 type Metadata struct {
-	value string
+	Value string
 }
 
 type RawMetadata []byte
 
 func (m *Metadata) Marshal() (RawMetadata, error) {
-	return []byte(m.value), nil
+	return []byte(m.Value), nil
 }
 
 func (r RawMetadata) Unmarshal() (Metadata, error) {
-	return Metadata{value: string(r)}, nil
+	return Metadata{Value: string(r)}, nil
 }
