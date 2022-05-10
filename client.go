@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -72,20 +73,35 @@ func (c *CassandraClient) Init(ip string, numObjects int) ([]gocql.UUID, error) 
 	if numObjects > 0 {
 		c.session.Query("TRUNCATE TABLE state").Exec()
 
+		b := c.session.NewBatch(gocql.UnloggedBatch)
+
 		for i := 0; i < numObjects; i++ {
 			id, err := gocql.RandomUUID()
 			if err != nil {
 				return nil, err
 			}
 
-			m := make(map[string]interface{})
-			_, err = c.session.Query(`INSERT INTO state(object_id, version, value, highest_version)
-				VALUES(?, ?, ?, ?) IF NOT EXISTS`, id, 0, "", 0).MapScanCAS(m)
-			if err != nil {
-				return nil, err
+			b.Entries = append(b.Entries, gocql.BatchEntry{
+				Stmt: `INSERT INTO state(object_id, version, value, highest_version)
+				VALUES(?, ?, ?, ?)`,
+				Args: []interface{}{id, 0, "", 0},
+			})
+
+			if len(b.Entries) > 16 {
+				err = c.session.ExecuteBatch(b)
+				if err != nil {
+					return nil, err
+				}
+				b.Entries = make([]gocql.BatchEntry, 0, 16)
+				time.Sleep(time.Second)
 			}
 
 			objectIds = append(objectIds, id)
+		}
+
+		err = c.session.ExecuteBatch(b)
+		if err != nil {
+			return nil, err
 		}
 	} else {
 		iter := c.session.Query("SELECT object_id, version FROM state").Iter()
@@ -109,10 +125,18 @@ func (c *CassandraClient) Init(ip string, numObjects int) ([]gocql.UUID, error) 
 			return nil, err
 		}
 	}
+	fmt.Println("Ready")
 	return objectIds, nil
 }
 
 func (c *CassandraClient) Write(uuid gocql.UUID, data string) (*response, error) {
+	return c.write(uuid, data, 5)
+}
+
+func (c *CassandraClient) write(uuid gocql.UUID, data string, retries int) (*response, error) {
+	if retries <= 0 {
+		return nil, fmt.Errorf("Out of retries.")
+	}
 	var version uint
 
 	fmt.Println("Writing")
@@ -136,7 +160,8 @@ func (c *CassandraClient) Write(uuid gocql.UUID, data string) (*response, error)
 		after := time.Now()
 
 		if err != nil {
-			return nil, err
+			fmt.Fprintln(os.Stderr, err)
+			return c.write(uuid, data, retries - 1)
 		}
 
 		rtt := after.Sub(before).Seconds() * 1000

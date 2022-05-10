@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
+	"github.com/pantherman594/giza/pkg/poisson"
 )
 
 type Giza struct {
@@ -19,8 +20,6 @@ type Giza struct {
 	waiting int32
 	done []chan struct{}
 
-	commits chan CommitValue
-
 	session *gocql.Session
 	peers   []*gocql.Session // All the cassandra tables in the network. Should include self.
 
@@ -28,13 +27,7 @@ type Giza struct {
 	classicQuorum int
 
 	timeout time.Duration
-}
-
-type CommitValue struct {
-	object_id gocql.UUID
-	version uint
-	metadata []byte
-	preaccepted_by uint
+	poissonGenerator *poisson.Poisson
 }
 
 type CASResult struct {
@@ -42,9 +35,14 @@ type CASResult struct {
 	value  map[string]interface{}
 }
 
+type WriteSlowPrepareResult struct {
+	success bool
+	highest_ballot int64
+	err error
+}
+
 func (g *Giza) Init(ip string, masterIp string, timeout time.Duration, numReplicas int, numObjects int) ([]gocql.UUID, error) {
 	var err error
-
 
 	// Set an id using the last 16 bits of the time in nanoseconds (repeats every
 	// 1 min) and 16 random bits
@@ -150,15 +148,27 @@ func (g *Giza) Init(ip string, masterIp string, timeout time.Duration, numReplic
 	g.timeout = timeout
 
 	if isMaster {
+		fmt.Printf("Creating %d objects.\n", numObjects)
+
+		ids := make([]gocql.UUID, numObjects)
+
 		for i := 0; i < numObjects; i++ {
 			id, err := gocql.RandomUUID()
 			if err != nil {
 				return nil, err
 			}
-			g.Create(id)
+			ids[i] = id
 		}
 
-		fmt.Printf("Creating %d objects.\n", numObjects)
+		wg := sync.WaitGroup{}
+		wg.Add(numObjects)
+		for _, id := range ids {
+			go func(id gocql.UUID) {
+				defer wg.Done()
+				g.Create(id)
+			}(id)
+		}
+		wg.Wait()
 	}
 
 	for {
@@ -192,11 +202,9 @@ func (g *Giza) Init(ip string, masterIp string, timeout time.Duration, numReplic
 	g.done = make([]chan struct{}, 0, 1)
 	g.fastQuorum = (3 * numReplicas / 4) + 1
 	g.classicQuorum = (numReplicas / 2) + 1
-	g.commits = make(chan CommitValue, 100)
+	g.poissonGenerator = poisson.NewPoisson(100 * 1000)
 
 	fmt.Println("Ready.")
-
-	go g.StartCommitWorker()
 
 	return objectIds, nil
 }
@@ -224,7 +232,7 @@ func (g *Giza) incrementBallot(ballot int64) int64 {
 	return int64(g.createBallot(g.readBallot(uint64(ballot)) + 1))
 }
 
-func (g *Giza) CreateVersion(object_id gocql.UUID, version uint) {
+func (g *Giza) CreateVersion(object_id gocql.UUID, version uint) (*sync.WaitGroup) {
 	wg, _, _ := g.CASAll(nil, `INSERT INTO state(object_id, version, committed, highest_ballot_accepted, highest_ballot_seen)
 		VALUES(?, ?, False, 0, 0)
 		IF NOT EXISTS`,
@@ -236,52 +244,52 @@ func (g *Giza) CreateVersion(object_id gocql.UUID, version uint) {
 		WHERE object_id = ? AND version = ?
 		IF highest_ballot_seen = null`,
 		object_id, version)
-	wg.Wait()
+
+	return wg
 }
 
 func (g *Giza) Commit(object_id gocql.UUID, version uint, metadata []byte, preaccepted_by uint) {
-	g.commits <- CommitValue{ object_id, version, metadata, preaccepted_by }
-}
+	var wg1, wg2, wg3, wg4 *sync.WaitGroup
 
-func (g *Giza) StartCommitWorker() {
-	for {
-		c := <- g.commits 
+	wg1, _, _ = g.CASAll(nil, `UPDATE state
+		SET highest_known_committed_version = ?
+		WHERE object_id = ?
+		IF highest_known_committed_version < ?`,
+		version, object_id, version)
 
-		wg, _, _ := g.ExecAll(`UPDATE state
-			SET known_committed_versions = known_committed_versions + ?, value = ?, committed = True
-			WHERE object_id = ? AND version = ?`,
-			[]int{int(c.version)}, c.metadata, c.object_id, int(c.version))
+	if preaccepted_by != 0 {
+		wg2 = g.ClearPreaccept(object_id, preaccepted_by)
+	}
 
-		wg.Wait()
+	wg3, _, _ = g.ExecAll(`UPDATE state
+		SET known_committed_versions = known_committed_versions + ?, value = ?, committed = True
+		WHERE object_id = ? AND version = ?`,
+		[]int{int(version)}, metadata, object_id, int(version))
 
-		wg, _, _ = g.CASAll(nil, `UPDATE state
-			SET highest_known_committed_version = ?
-			WHERE object_id = ?
-			IF highest_known_committed_version < ?`,
-			c.version, c.object_id, c.version)
+	wg4 = g.CreateVersion(object_id, version + 1)
 
-		wg.Wait()
+	wg1.Wait()
+	if wg2 != nil {
+		wg2.Wait()
+	}
+	wg3.Wait()
+	wg4.Wait()
 
-		if c.preaccepted_by != 0 {
-			g.ClearPreaccept(c.object_id, c.preaccepted_by)
-		}
-
-		if (atomic.AddInt32(&g.waiting, -1) == 0) {
-			for _, ch := range g.done {
-				ch <- struct{}{}
-			}
+	if (atomic.AddInt32(&g.waiting, -1) == 0) {
+		for _, ch := range g.done {
+			ch <- struct{}{}
 		}
 	}
 }
 
-func (g *Giza) ClearPreaccept(object_id gocql.UUID, preaccepted_by uint) {
+func (g *Giza) ClearPreaccept(object_id gocql.UUID, preaccepted_by uint) *sync.WaitGroup {
 	wg, _, _ := g.CASAll(nil, `UPDATE state
 		SET preaccepted = null, preaccepted_value = null
 		WHERE object_id = ?
 		IF preaccepted = ?`,
 		object_id, preaccepted_by)
 
-	wg.Wait()
+	return wg
 }
 
 func (g *Giza) ExecAll(stmt string, values ...interface{}) (*sync.WaitGroup, context.Context, context.CancelFunc) {
@@ -332,6 +340,12 @@ func (g *Giza) SelectAll(results *chan []map[string]interface{}, stmt string, va
 	}
 
 	return wg, parent_ctx, cancel
+}
+
+func (g *Giza) WaitAll(waits []*sync.WaitGroup) {
+	for _, wait := range waits {
+		wait.Wait()
+	}
 }
 
 func (g *Giza) CASAll(results *chan CASResult, stmt string, values ...interface{}) (*sync.WaitGroup, context.Context, context.CancelFunc) {
@@ -452,9 +466,9 @@ result_loop:
 				// Too many peers failed to achieve fast quorum
 
 				*results_p = nil
-				g.ClearPreaccept(object_id, uint(g.id))
+				go g.ClearPreaccept(object_id, uint(g.id))
 
-				return g.WriteSlow(object_id, highest_version + 1, metadata)
+				return g.WriteSlow(object_id, metadata, highest_version + 1, 0)
 			}
 		}
 	}
@@ -472,9 +486,7 @@ result_loop:
 	return nil
 }
 
-func (g *Giza) WriteSlow(object_id gocql.UUID, version uint, metadata []byte) error {
-	var last_highest_ballot int64
-
+func (g *Giza) WriteSlow(object_id gocql.UUID, metadata []byte, version uint, last_highest_ballot int64) error {
 	if version == 0 {
 		last_version, err := g.getHighestCommittedVersion(object_id)
 		if err != nil {
@@ -484,48 +496,60 @@ func (g *Giza) WriteSlow(object_id gocql.UUID, version uint, metadata []byte) er
 		version = last_version + 1
 	}
 
-	g.CreateVersion(object_id, version)
-
-	err := g.session.Query(`SELECT highest_ballot_seen
-		FROM state
-		WHERE object_id = ? AND version = ?`,
-		object_id, version).Scan(&last_highest_ballot)
-
-	if err != nil {
-		return err
+	if last_highest_ballot == 0 {
+		err := g.session.Query(`SELECT highest_ballot_seen
+			FROM state
+			WHERE object_id = ? AND version = ?`,
+			object_id, version).Scan(&last_highest_ballot)
+		if err != nil && err != gocql.ErrNotFound{
+			return err
+		}
 	}
 
 	ballot := g.incrementBallot(last_highest_ballot)
 
 	fmt.Println("TRY SLOW", object_id, version, ballot)
 
-	if success, err := g.writeSlowPrepare(object_id, version, ballot); err != nil {
-		return err
-	} else if !success {
-		// Try again, with a higher ballot number
-		return g.WriteSlow(object_id, 0, metadata)
-	}
+	prepareResults := make(chan WriteSlowPrepareResult)
 
-	preaccepted_max_count, preaccepted_max_val, highest_accepted_max, highest_accepted_val, err := g.writeSlowQuery(object_id, version)
+	go func() {
+		success, highest_ballot, err := g.writeSlowPrepare(object_id, version, ballot)
+		prepareResults <- WriteSlowPrepareResult{success, highest_ballot, err}
+	}()
+
+	preaccepted_max_count, preaccepted_max_by, preaccepted_max_val, highest_accepted_max, highest_accepted_val, err := g.writeSlowQuery(object_id, version)
 	if err != nil {
 		return nil
 	}
 
+	res := <-prepareResults
+	if res.err != nil {
+		return res.err
+	} else if !res.success {
+		// Try again, with a higher ballot number
+		return g.WriteFast(object_id, metadata, 0)
+	}
+
 	var value RawMetadata
 	send_self := false
+	preaccepted_by := uint(0)
 
 	if highest_accepted_max > 0 {
 		// Case 1: accept the value with the highest accepted ballot
 		value = highest_accepted_val
 		ballot = int64(highest_accepted_max)
+		fmt.Println("CASE 1")
 	} else if preaccepted_max_count > 0 {
 		// Case 2: accept the most popular pre-accepted value
 		// version = int64(preaccepted_max_ver)
 		value = preaccepted_max_val
+		preaccepted_by = preaccepted_max_by
+		fmt.Println("CASE 2")
 	} else {
 		// Case 3: no real contention, send accept request with own value
 		value = metadata
 		send_self = true
+		fmt.Println("CASE 3")
 	}
 
 	if success, already_committed, err := g.writeSlowCommit(object_id, version, ballot, &value); err != nil {
@@ -534,26 +558,30 @@ func (g *Giza) WriteSlow(object_id gocql.UUID, version uint, metadata []byte) er
 		// Try again, with a higher ballot number
 
 		if already_committed {
-			return g.WriteFast(object_id, metadata, version + 1)
+			fmt.Println("COMMITTED")
+			return g.WriteFast(object_id, metadata, 0)
 		}
+		fmt.Println("NOT COMMITTED")
+		return g.WriteFast(object_id, metadata, 0)
 
-		return g.WriteSlow(object_id, 0, metadata)
+		//return g.WriteSlow(object_id, 0, metadata)
 	}
 
 	// Asynchronously commit
 
 	atomic.AddInt32(&g.waiting, 1)
 	fmt.Println("SLOW", object_id, version)
+
+	go g.Commit(object_id, version, value, preaccepted_by)
 	if !send_self {
-		go g.Commit(object_id, version, value, 0)
+		fmt.Println("SENT OTHER")
 		return g.WriteFast(object_id, metadata, version + 1)
 	} else {
-		go g.Commit(object_id, version, metadata, 0)
 		return nil
 	}
 }
 
-func (g *Giza) writeSlowPrepare(object_id gocql.UUID, version uint, ballot int64) (bool, error) {
+func (g *Giza) writeSlowPrepare(object_id gocql.UUID, version uint, ballot int64) (bool, int64, error) {
 	n_success := 0
 	n_fail := 0
 
@@ -572,31 +600,43 @@ func (g *Giza) writeSlowPrepare(object_id gocql.UUID, version uint, ballot int64
 		IF highest_ballot_seen < ?`,
 		ballot, object_id, version, ballot)
 
+	highest_ballot := ballot
+
 	for {
 		select {
 		case <-ctx.Done():
-			return false, ctx.Err()
+			return false, 0, ctx.Err()
 		case result := <-results:
 			if result.success {
 				n_success += 1
 			} else {
 				n_fail += 1
+
+				if result.value != nil {
+					if raw, ok := result.value["highest_ballot_seen"]; ok {
+						if i, ok := raw.(int64); ok {
+							if uint64(i) > uint64(highest_ballot) {
+								highest_ballot = i
+							}
+						}
+					}
+				}
 			}
 
 			if n_success >= g.classicQuorum {
 				// Successful write
-				return true, nil
+				return true, 0, nil
 			}
 
 			if len(g.peers)-n_fail < g.classicQuorum {
 				// Too many peers failed to achieve fast quorum
-				return false, nil
+				return false, highest_ballot, nil
 			}
 		}
 	}
 }
 
-func (g *Giza) writeSlowQuery(object_id gocql.UUID, version uint) (preaccepted_max_count int, preaccepted_max_val RawMetadata, highest_accepted_max uint64, highest_accepted_val RawMetadata, err error) {
+func (g *Giza) writeSlowQuery(object_id gocql.UUID, version uint) (preaccepted_max_count int, preaccepted_max_by uint, preaccepted_max_val RawMetadata, highest_accepted_max uint64, highest_accepted_val RawMetadata, err error) {
 	// Retrieve the preaccepted and highest ballot values.
 	// Unlike Giza, this will require a second request because Cassandra does not
 	// read values when writing.
@@ -641,6 +681,7 @@ func (g *Giza) writeSlowQuery(object_id gocql.UUID, version uint) (preaccepted_m
 					if prev+1 > preaccepted_max_count {
 						preaccepted_max_count = prev + 1
 						preaccepted_max_val = *pd.preaccepted_value
+						preaccepted_max_by = *pd.preaccepted
 					}
 				}
 
@@ -695,7 +736,7 @@ func (g *Giza) writeSlowCommit(object_id gocql.UUID, version uint, ballot int64,
 			if result.success {
 				n_success += 1
 			} else {
-				if result.value["committed"].(bool) == true {
+				if r, ok := result.value["committed"]; ok && r.(bool) == true {
 					return false, true, nil
 				}
 
@@ -727,7 +768,7 @@ type paxosData struct {
 
 func parsePaxosData(data map[string]interface{}) (p paxosData) {
 	if raw, ok := data["preaccepted"]; ok {
-		if i, ok := raw.(int); ok {
+		if i, ok := raw.(int32); ok {
 			u := uint(i)
 			p.preaccepted = &u
 		}

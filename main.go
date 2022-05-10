@@ -22,7 +22,7 @@ var numReplicas *int = flag.Int("n", 3, "Number of clients. Only used on the mas
 var numObjects *int = flag.Int("o", 10, "Number of objects to randomly write to. Higher numbers reduce likelihood of collisions. Only used on the master. Defaults to 10.")
 var procs *int = flag.Int("p", 2, "GOMAXPROCS.")
 var T = flag.Int("T", 16, "Number of threads (simulated clients).")
-var poissonAvg = flag.Int("poisson", -1, "The average number of microseconds between requests. -1 disables Poisson.")
+var poissonAvg = flag.Int("poisson", -1, "The average number of milliseconds between requests. -1 disables Poisson.")
 var timeout *int = flag.Int("timeout", 30, "Duration in seconds of the timeout used when running the client")
 
 // Information about the latency of an operation
@@ -62,6 +62,9 @@ func main() {
 
 	if *mode == "cassandra" {
 		c := CassandraClient{}
+		if *masterAddr != *dbAddr {
+			*numObjects = 0
+		}
 		objectIds, err = c.Init(*dbAddr, *numObjects)
 		if err != nil {
 			log.Fatalln(err)
@@ -87,7 +90,7 @@ func main() {
 
 func simulatedClient(client Client, objectIds []gocql.UUID, readings chan *response) {
 	idRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	poissonGenerator := poisson.NewPoisson(*poissonAvg)
+	poissonGenerator := poisson.NewPoisson(*poissonAvg * 1000)
 	numObjects := len(objectIds)
 	fmt.Println(objectIds)
 

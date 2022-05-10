@@ -36,7 +36,7 @@ commitlog_segment_size_in_mb: 32
 seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
       parameters:
-          - seeds: "192.168.1.1:7000,192.168.1.2:7000"
+          - seeds: "192.168.1.1:7000,192.168.1.2:7000,192.168.1.3:7000,192.168.1.4:7000,192.168.1.5:7000"
 concurrent_reads: 32
 concurrent_writes: 32
 concurrent_counter_writes: 32
@@ -65,11 +65,11 @@ compaction_throughput_mb_per_sec: 64
 sstable_preemptive_open_interval_in_mb: 50
 read_request_timeout_in_ms: 5000
 range_request_timeout_in_ms: 10000
-write_request_timeout_in_ms: 2000
+write_request_timeout_in_ms: 20000
 counter_write_request_timeout_in_ms: 5000
-cas_contention_timeout_in_ms: 1000
+cas_contention_timeout_in_ms: 10000
 truncate_request_timeout_in_ms: 60000
-request_timeout_in_ms: 10000
+request_timeout_in_ms: 100000
 slow_query_log_timeout_in_ms: 500
 endpoint_snitch: GossipingPropertyFileSnitch
 dynamic_snitch_update_interval_in_ms: 100 

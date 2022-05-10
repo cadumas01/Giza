@@ -1,0 +1,4 @@
+5 PCs
+200ms artificial latency between nodes
+
+python shell.py send './build.sh && ./giza -maddr 192.168.1.1 -n 5 -poisson 100 -addr 192.168.1.[i] -o 128 -T 1'

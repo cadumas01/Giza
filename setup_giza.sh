@@ -1,12 +1,24 @@
 #!/bin/bash
 
-sed -i "s/\[NUM\]/$1/g" configs/giza/*
+num=$1
+
+if [[ ${num} == "" ]]; then
+  echo "Please provide the node number."
+  exit 1
+fi
+
+sed -i "s/\[NUM\]/$num/g" configs/giza/*
 
 sudo cp configs/giza/cassandra.yaml /etc/cassandra/cassandra.yaml
 sudo cp configs/giza/cassandra-rackdc.properties /etc/cassandra/cassandra-rackdc.properties
 
-sudo systemctl restart cassandra.service
+sudo systemctl stop cassandra.service
+sudo rm -rf /var/lib/cassandra/*
+sudo systemctl start cassandra.service
 
-sleep 5
+until $(nc -z "192.168.1.$num" 9042)
+do
+  sleep 1
+done
 
 cqlsh 192.168.1.$num -e "CREATE KEYSPACE giza WITH replication = {'class':'SimpleStrategy', 'replication_factor': 1};"
