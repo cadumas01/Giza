@@ -468,7 +468,7 @@ result_loop:
 				*results_p = nil
 				go g.ClearPreaccept(object_id, uint(g.id))
 
-				return g.WriteSlow(object_id, metadata, highest_version + 1, 0)
+				return g.WriteSlow(object_id, metadata, highest_version + 1)
 			}
 		}
 	}
@@ -486,7 +486,7 @@ result_loop:
 	return nil
 }
 
-func (g *Giza) WriteSlow(object_id gocql.UUID, metadata []byte, version uint, last_highest_ballot int64) error {
+func (g *Giza) WriteSlow(object_id gocql.UUID, metadata []byte, version uint) error {
 	if version == 0 {
 		last_version, err := g.getHighestCommittedVersion(object_id)
 		if err != nil {
@@ -496,14 +496,13 @@ func (g *Giza) WriteSlow(object_id gocql.UUID, metadata []byte, version uint, la
 		version = last_version + 1
 	}
 
-	if last_highest_ballot == 0 {
-		err := g.session.Query(`SELECT highest_ballot_seen
-			FROM state
-			WHERE object_id = ? AND version = ?`,
-			object_id, version).Scan(&last_highest_ballot)
-		if err != nil && err != gocql.ErrNotFound{
-			return err
-		}
+	var last_highest_ballot int64
+	err := g.session.Query(`SELECT highest_ballot_seen
+		FROM state
+		WHERE object_id = ? AND version = ?`,
+		object_id, version).Scan(&last_highest_ballot)
+	if err != nil && err != gocql.ErrNotFound{
+		return err
 	}
 
 	ballot := g.incrementBallot(last_highest_ballot)
