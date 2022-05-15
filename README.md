@@ -30,9 +30,9 @@
 
 #### Finally
 
-8. Press the enter key in the top left tmux pane, to start the master instance first.
+8. Press the enter key in node1 (which should be the top left tmux pane), to start the master instance first.
 9. Once the master is ready, run `python shell.py send 'Enter'` to start all the other instances.
-10. To end the tests, run `python shell.py send 'C-c'`.
+10. To end the tests, run `python shell.py send 'C-c'` to send the ctrl+c interrupt on all machines.
 11. To end the tmux session, run `python shell.py send 'exit' 'Enter' 'exit' 'Enter'`.
 12. Copy the latest directory in `results/` and run `copy.sh` to copy all the latency outputs.
 
