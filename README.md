@@ -8,7 +8,7 @@
 4. On your local machine, run `python shell.py` to launch a tmux session with SSH connections to each of the machines.
     - `shell.py` provides an easy way to send keystrokes to all of the machines at once.
     - If you are using `shell.py`, all the following commands are to be run on your local machine.
-    - Alternatively, you can manually launch SSH connections to each of the machines, and run the commands after `python shell.py send` on each of them, replacing `[i]` with the number of the machine (1 for node1 on CloudLab, 2 for node2, etc.). Where it says `'Enter'`, simply press the enter key.
+    - Alternatively, you can manually launch SSH connections to each of the machines, and run the commands after `python shell.py send` on each of them while in the `~/giza` directory, replacing `[i]` with the number of the machine (1 for node1 on CloudLab, 2 for node2, etc.). Where it says `'Enter'`, simply press the enter key.
 
 #### Giza Without Contention Tests
 
