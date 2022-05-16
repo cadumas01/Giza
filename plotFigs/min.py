@@ -2,7 +2,7 @@ import glob
 import os
 import random
 
-log_files = glob.glob("./latencies/giza_c/6a/latFileWrite*")
+log_files = glob.glob("../results/10/latency.*")
 
 latencies = []
 # Convert regional latencies into a 2D list and count how many operations were recorded in each region.
@@ -16,3 +16,4 @@ for log_file in log_files:
 
 print(sorted(latencies)[len(latencies)//2])
 print(max(latencies))
+print(min(latencies))

@@ -39,8 +39,8 @@ for i in range(params.n):
 
     lan.addInterface(iface)
 
-lan.bandwidth = 0
-lan.latency = params.lat // 4
+lan.bandwidth = 0 # For some reason, the below does not apply without this line.
+lan.latency = params.lat // 4 # Set the latency of each link in the LAN.
 
 pc.printRequestRSpec()
 
