@@ -2,7 +2,7 @@
 
 ## Running Tests
 
-1. Set up CloudLab experiment using `cloudconfig.py`. The script allocates the desired number of nodes and creates links connecting them all to a LAN, and also sets the latency of each link, to simulate cross-DC latency. It is set to use a pre-created image with Cassandra installed to reduce setup time.
+1. Set up CloudLab experiment using `cloudconfig.py`. The script allocates the desired number of nodes and creates links connecting them all to a LAN, and also sets the latency of each link, to simulate cross-DC latency. **The latency will be set when configuring an experiment with the profile, and cannot be changed unless you create a new experiment.** It is set to use a pre-created image with Cassandra installed to reduce setup time.
 2. Edit `servers.txt` with the SSHs command provided by CloudLab, separated by a new line.
 3. On your local machine, run `sync.sh` to copy the repository code to each of the machines.
 4. On your local machine, run `python shell.py` to launch a tmux session with SSH connections to each of the machines.
