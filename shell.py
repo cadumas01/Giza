@@ -3,7 +3,7 @@ import os
 import sys
 
 servers_file = "./servers.txt"
-shell = "zsh"
+shell = "bash"
 
 with open(servers_file, "r") as f:
     servers = f.readlines()
