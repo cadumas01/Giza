@@ -8,5 +8,5 @@ set output './plots//giza-contention.png'
 set style line 1 linetype 1 linecolor "web-green" linewidth 6 dashtype 4
 set style line 2 linetype 1 linecolor "orange" linewidth 6 dashtype 1
 set style line 3 linetype 1 linecolor "blue" linewidth 6 dashtype 3
-plot '/tmp/tmpgevpob29' title 'Giza Contentionless' ls 1 with lines, \
-'/tmp/tmptu1uhzj2' title 'Giza with Contention' ls 2 with lines
+plot '/tmp/tmpf_t34j8e' title 'Giza Contentionless' ls 1 with lines, \
+'/tmp/tmp3cl5_fzy' title 'Giza with Contention' ls 2 with lines
