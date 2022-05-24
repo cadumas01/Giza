@@ -24,6 +24,7 @@ if len(sys.argv) > 1:
             script += f" \; send-keys -t {i} {a}"
         print(script)
         os.system(script)
+        print("Line 27")
         exit(0)
     try:
         si = int(sys.argv[1])
@@ -37,6 +38,7 @@ if len(sys.argv) > 1:
         print("Invalid index")
         exit(1)
 
+print("line 40")
 script = ""
 
 for i in range(len(servers)):
@@ -58,8 +60,10 @@ for i in range(len(servers)):
 for i, server in enumerate(servers):
     script += f" \; send-keys -t {i} '{server}' 'C-m' 'cd giza' 'C-m' 'clear' 'C-m'"
 
+print("line 63, script = ", script)
 os.system(script)
 
+print("At end of shell.py")
 # while IFS= read -r line
 # do
 #   if test $n -eq 0
