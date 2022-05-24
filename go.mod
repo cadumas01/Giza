@@ -1,4 +1,4 @@
-module github.com/cadumas01/giza
+module github.com/pantherman594/giza
 
 go 1.18
 
