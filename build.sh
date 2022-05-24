@@ -2,4 +2,4 @@
 
 export PATH=$PATH:/usr/local/go/bin
 
-go build
+go -buildvcs=false build
