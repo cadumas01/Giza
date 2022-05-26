@@ -1,8 +1,14 @@
-"""Setup for Gus replication experiments. Copies the disk image across all machines, not just the control machine."""
+"""Based on zhouaea's gus-automoation setup. Setup for Gus replication experiments. Copies the disk image across all machines, not just the control machine."""
+
+# Note : currently setup so the cloudlab experiment must be called "test"
 
 import ast
 # Import the Portal object.
 import geni.portal as portal
+
+# Disk image from pantherman594's original "cloudconfig.py" script
+DISK_IMAGE = "urn:publicid:IDN+utah.cloudlab.us+image+hyflowtm-PG0:giza-cassandra-test:1"
+
 
 # Create a portal object,
 pc = portal.Context()
@@ -12,7 +18,7 @@ portal.context.defineParameter("replica_type", "Replica Hardware Type", portal.P
 portal.context.defineParameter("client_type", "Client Hardware Type", portal.ParameterType.NODETYPE, "c6525-25g")
 portal.context.defineParameter("control_machine", "Use Control Machine?", portal.ParameterType.BOOLEAN, True)
 portal.context.defineParameter("control_type", "Control Hardware Type", portal.ParameterType.NODETYPE, "m510")
-portal.context.defineParameter("control_disk_image", "Control Machine Disk Image", portal.ParameterType.IMAGE, "urn:publicid:IDN+utah.cloudlab.us+image+hyflowtm-PG0:gus-automation")
+portal.context.defineParameter("control_disk_image", "Control Machine Disk Image", portal.ParameterType.IMAGE, DISK_IMAGE)
 
 params = portal.context.bindParameters()
 
