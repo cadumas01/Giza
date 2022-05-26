@@ -16,7 +16,7 @@ sudo systemctl stop cassandra.service
 sudo rm -rf /var/lib/cassandra/*
 sudo systemctl start cassandra.service
 
-until $(nc -z "192.168.1.$num" 9042)
+until $(nc -z "10.10.1.$num" 9042)
 do
   sleep 1
 done
