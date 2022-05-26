@@ -22,3 +22,5 @@ do
 done
 
 cqlsh 192.168.1.$num -e "CREATE KEYSPACE giza WITH replication = {'class':'SimpleStrategy', 'replication_factor': 1};"
+
+echo "setup_giza.sh has been called"
