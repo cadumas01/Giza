@@ -7,15 +7,15 @@ if [[ ${num} == "" ]]; then
   exit 1
 fi
 
-mkdir "testdir"
+
 
 sed -i "s/\[NUM\]/$num/g" ./Giza/configs/giza/*
 
-sudo cp ./Giza/configs/giza/cassandra.yaml /etc/cassandra/cassandra.yaml
-sudo cp ./Giza/configs/giza/cassandra-rackdc.properties /etc/cassandra/cassandra-rackdc.properties
+sudo cp ./Giza/configs/giza/cassandra.yaml ./Giza/etc/cassandra/cassandra.yaml
+sudo cp ./Giza/configs/giza/cassandra-rackdc.properties ./Giza/etc/cassandra/cassandra-rackdc.properties
 
-sudo systemctl stop cassandra.service
-sudo rm -rf /var/lib/cassandra/*
+sudo systemctl stop cassandra.service # Check on directories path
+sudo rm -rf ./Giza/var/lib/cassandra/*
 sudo systemctl start cassandra.service
 
 until $(nc -z "10.10.1.$num" 9042)
