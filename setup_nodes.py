@@ -21,7 +21,7 @@
 #
 # 4. ./giza ...  on each node
 
-
+# Todo: fix remote ip addresses. setup_giza.sh ... Cut control machine for setup? 
 
 import json
 from utils.remote_util import *
@@ -39,6 +39,6 @@ server_names = config['server_names']
 # Going through each server and crunning setup_giza
 for server_name in server_names:
     server_url = get_machine_url(config, server_name)
-    run_remote_command_sync("bash setup_giza.sh", server_url) # Not sure if works of if need to change directories or sudo su first
+    run_remote_command_sync("/Giza/bash setup_giza.sh", server_url) # Not sure if works of if need to change directories or sudo su first
 
 
