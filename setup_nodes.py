@@ -37,10 +37,12 @@ server_names = config['server_names']
 
 
 # Going through each server and crunning setup_giza
-for server_name in server_names:
-    server_url = get_machine_url(config, server_name)
+for i in range(len(server_names)):
+    server_url = get_machine_url(config, server_names[i])
 
+    
     # When running remote commands, we are currently in root
-    run_remote_command_sync("bash ./Giza/setup_giza.sh", server_url) # Not sure if works of if need to change directories or sudo su first
+    # Must pass argument with setup_giza.sh [1 to 5] for [california to japan]
+    run_remote_command_sync("bash ./Giza/setup_giza.sh " + str(i + 1), server_url) # Not sure if works of if need to change directories or sudo su first
     # run_remote_command_sync("mkdir ./Giza/testfile2", server_url)
 
