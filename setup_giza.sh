@@ -9,7 +9,7 @@ fi
 
 pwd
 
-sed -i "s/\[NUM\]/$num/g" configs/giza/*
+sed -i "s/\[NUM\]/$num/g" ./configs/giza/*
 
 sudo cp ./configs/giza/cassandra.yaml /etc/cassandra/cassandra.yaml
 sudo cp ./configs/giza/cassandra-rackdc.properties /etc/cassandra/cassandra-rackdc.properties
