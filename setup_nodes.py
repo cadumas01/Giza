@@ -40,5 +40,5 @@ server_names = config['server_names']
 for server_name in server_names:
     server_url = get_machine_url(config, server_name)
     run_remote_command_sync("./Giza/bash setup_giza.sh", server_url) # Not sure if works of if need to change directories or sudo su first
-    run_remote_command_sync("mkdir /.Giza/testfile2", server_url)
+    run_remote_command_sync("mkdir ./Giza/testfile2", server_url)
 
