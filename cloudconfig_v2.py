@@ -50,16 +50,16 @@ for i in range(len(replicas)):
     replica.hardware_type = params.replica_type
 
 # Instantiate client machine
-client = request.RawPC('client')
-lan_list.append(client)
-client.hardware_type = params.client_type
+# client = request.RawPC('client')
+# lan_list.append(client)
+# client.hardware_type = params.client_type
 
-# Instantiate control machine
-if params.control_machine:
-    control = request.RawPC('control')
-    lan_list.append(control)
-    control.hardware_type = params.control_type
-    control.disk_image = params.control_disk_image
+# # Instantiate control machine
+# if params.control_machine:
+#     control = request.RawPC('control')
+#     lan_list.append(control)
+#     control.hardware_type = params.control_type
+#     control.disk_image = params.control_disk_image
 
 lan = request.Link(members=lan_list)
 
