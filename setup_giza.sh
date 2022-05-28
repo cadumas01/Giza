@@ -7,6 +7,8 @@ if [[ ${num} == "" ]]; then
   exit 1
 fi
 
+pwd
+
 sed -i "s/\[NUM\]/$num/g" configs/giza/*
 
 sudo cp ./configs/giza/cassandra.yaml /etc/cassandra/cassandra.yaml
