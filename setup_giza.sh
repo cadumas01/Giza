@@ -7,7 +7,7 @@ if [[ ${num} == "" ]]; then
   exit 1
 fi
 
-pwd
+mkdir "testdir"
 
 sed -i "s/\[NUM\]/$num/g" ./Giza/configs/giza/*
 
