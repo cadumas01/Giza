@@ -28,17 +28,19 @@ params = portal.context.bindParameters()
 request = pc.makeRequestRSpec()
 replicas = ast.literal_eval(params.replicas)
 
-lan_list = []
+lan = request.LAN()
+
+# lan_list = []
+
+
 # Instantiate server machines.
 for i in range(len(replicas)):
     si = str(i + 1)
 
     replica = request.RawPC(replicas[i])
-    iface = replica.addInterface()
-
-    
     replica.disk_image = DISK_IMAGE
 
+    iface = replica.addInterface()
 
     #iface.component_id = "eth1"
 
@@ -46,8 +48,10 @@ for i in range(len(replicas)):
     iface.component_id = "eth1"
     iface.addAddress(rspec.IPv4Address("192.168.1." + si, "255.255.255.0"))
 
-    lan_list.append(replica)
+    # lan_list.append(replica)
     replica.hardware_type = params.replica_type
+
+    lan.addInterface(iface)
 
 # Instantiate client machine
 # client = request.RawPC('client')
@@ -61,7 +65,7 @@ for i in range(len(replicas)):
 #     control.hardware_type = params.control_type
 #     control.disk_image = params.control_disk_image
 
-lan = request.Link(members=lan_list)
+# lan = request.Link(members=lan_list)
 
 # Print the generated rspec
 pc.printRequestRSpec(request)
