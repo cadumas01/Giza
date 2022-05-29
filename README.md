@@ -42,6 +42,5 @@ Run `python plotFigs/plot_figs.py`. The plots will be generated in `plotFigs/plo
 
 
 # BCCA 22 notes
-- results/12 is Giza
-- results/13 is Cassandra
 - results/15 is Cholula (14 is old cholula)
+- results/16 is Giza
