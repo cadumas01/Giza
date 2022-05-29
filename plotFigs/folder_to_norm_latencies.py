@@ -1,6 +1,7 @@
 import glob
 import os
 import random
+import math
 
 
 def extract_norm_latencies(folder, is_for_reads):
@@ -38,24 +39,30 @@ def extract_norm_latencies(folder, is_for_reads):
     for i in range(len(regional_latencies)):
         ops = regional_latencies[i]
         first_index = 0
-        while True:
+        while True :
+
             if ops[first_index][0] >= last_start:
                 first_index += 5
                 break
             first_index += 1
         last_index = -1
-        while True:
+       # print("first_end: ", first_end)
+        while True :
+           # print(last_index)
+           # print("first_end: ", first_end)
             if ops[last_index][0] <= first_end:
                 last_index -= 5
                 break
             last_index -= 1
 
         ops = ops[first_index:last_index]
+        
         print(first_index, last_index, len(ops))
         regional_latencies[i] = ops
         regional_latency_counts.append(len(ops))
 
     print(regional_latency_counts)
+    print("Just finished printing ", folder, "\n\n")
     latencies_to_take = min(regional_latency_counts)
     # print("taking %d ops from each region" % latencies_to_take)
 

@@ -3,3 +3,4 @@ ssh -A -p 22 dumasca@ms0805.utah.cloudlab.us
 ssh -A -p 22 dumasca@ms0833.utah.cloudlab.us
 ssh -A -p 22 dumasca@ms0817.utah.cloudlab.us
 ssh -A -p 22 dumasca@ms0838.utah.cloudlab.us
+ssh -A -p 22 dumasca@ms0838.utah.cloudlab.us
