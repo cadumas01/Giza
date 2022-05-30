@@ -46,4 +46,6 @@ Run `python plotFigs/plot_figs.py`. The plots will be generated in `plotFigs/plo
 - results/18 is giza (maytbe worse)
 - results/19 is cassandra
 - results/20 is cholula
-- results/21 is cholula (delay working)
+- results/21 is cholula (delay working??)
+- results/22 is giza
+- results/23 is cholula (better?)

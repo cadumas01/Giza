@@ -8,6 +8,6 @@ set output './plots//giza-cassandra-cholula.png'
 set style line 1 linetype 1 linecolor "web-green" linewidth 6 dashtype 4
 set style line 2 linetype 1 linecolor "orange" linewidth 6 dashtype 1
 set style line 3 linetype 1 linecolor "blue" linewidth 6 dashtype 3
-plot '/tmp/tmpiiylp2y7' title 'Giza' ls 1 with lines, \
-'/tmp/tmplvybr78u' title 'Cassandra' ls 2 with lines, \
-'/tmp/tmp2183phcr' title 'Cholula' ls 3 with lines
+plot '/tmp/tmps52wsl4a' title 'Giza' ls 1 with lines, \
+'/tmp/tmp3l7ebd64' title 'Cassandra' ls 2 with lines, \
+'/tmp/tmpo6d83g1i' title 'Cholula' ls 3 with lines
