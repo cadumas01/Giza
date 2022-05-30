@@ -24,7 +24,7 @@ if params.n < 1 or params.n > 8:
 
 pc.verifyParameters()
 
-# lan = request.LAN()
+lan = request.LAN()
 
 node_list = []
 
@@ -40,68 +40,12 @@ for i in range(params.n):
     iface.addAddress(rspec.IPv4Address("192.168.1." + si, "255.255.255.0"))
 
     node_list.append(node)
-   #  lan.addInterface(iface)
+    lan.addInterface(iface)
 
 # lan.bandwidth = 0 # For some reason, the below does not apply without this line.
-#lan.latency = params.lat // 4 # Set the latency of each link in the LAN.
+# lan.latency = params.lat // 4 # Set the latency of each link in the LAN.
 
 
-node_codes = {
-    1: "california",
-    2: "ireland",
-    3: "japan",
-    4: "oregon",
-    5: "virginia"
-}
-
-server_ping_latencies = {
-    "california": {
-        "california": 0,
-        "ireland": 151,
-        "japan": 113,
-        "oregon": 59,
-        "virginia": 72
-    },
-    "ireland": {
-        "california": 151,
-        "ireland": 0,
-        "japan": 220,
-        "oregon": 145,
-        "virginia": 88
-    },
-    "japan": {
-        "california": 113,
-        "ireland": 220,
-        "japan": 0,
-        "oregon": 121,
-        "virginia": 162
-    },
-    "oregon": {
-        "california": 59,
-        "ireland": 145,
-        "japan": 121,
-        "oregon": 0,
-        "virginia": 93
-    },
-    "virginia": {
-        "california": 72,
-        "ireland": 88,
-        "japan": 162,
-        "oregon": 93,
-        "virginia": 0
-    }
-}
-
-# links node_i with node_j
-for i in range(len(node_list)):
-    for j in range(0,i + 1):
-        link = request.Link(members = [node_list[i], node_list[j]])
-
-        code_i = node_codes[i + 1]
-        code_j = node_codes[j + 1]
-
-        link.bandwidth = 0
-        link.latency = server_ping_latencies[code_i][code_j] / 4
 
 
 
