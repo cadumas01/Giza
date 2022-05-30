@@ -15,7 +15,7 @@ def main():
 
 
     
-    giza_folder = os.path.join(results_folder, "17")
+    giza_folder = os.path.join(results_folder, "22")
     cassandra_folder = os.path.join(results_folder, "19")
     cholula_folder = os.path.join(results_folder, "21")
 
