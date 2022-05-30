@@ -15,9 +15,9 @@ def main():
 
 
     
-    giza_folder = os.path.join(results_folder, "9")
-    cassandra_folder = os.path.join(results_folder, "10")
-    cholula_folder = os.path.join(results_folder, "15")
+    giza_folder = os.path.join(results_folder, "17")
+    cassandra_folder = os.path.join(results_folder, "19")
+    cholula_folder = os.path.join(results_folder, "21")
 
     #fig 6
     giza_csvs, cassandra_csvs, cholula_csvs = calculate_fig_6_csvs(giza_folder,
