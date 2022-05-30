@@ -42,5 +42,5 @@ Run `python plotFigs/plot_figs.py`. The plots will be generated in `plotFigs/plo
 
 
 # BCCA 22 notes
-- results/15 is Cholula (14 is old cholula)
-- results/16 is Giza
+- results/17 is giza
+- results/18 is giza (maytbe worse)
