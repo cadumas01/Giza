@@ -1,5 +1,5 @@
-ssh -A -p 22 dumasca@ms1115.utah.cloudlab.us
-ssh -A -p 22 dumasca@ms1144.utah.cloudlab.us
-ssh -A -p 22 dumasca@ms1127.utah.cloudlab.us
-ssh -A -p 22 dumasca@ms1105.utah.cloudlab.us
-ssh -A -p 22 dumasca@ms1134.utah.cloudlab.us
+ssh -A -p 22 dumasca@ms1010.utah.cloudlab.us
+ssh -A -p 22 dumasca@ms1042.utah.cloudlab.us
+ssh -A -p 22 dumasca@ms1044.utah.cloudlab.us
+ssh -A -p 22 dumasca@ms1043.utah.cloudlab.us
+ssh -A -p 22 dumasca@ms1030.utah.cloudlab.us

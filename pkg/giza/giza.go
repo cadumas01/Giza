@@ -457,7 +457,7 @@ result_loop:
 				}
 			}
 
-			if n_success >= 4 {
+			if n_success >= g.fastQuorum {
 				// Successful write: commit the value
 				break result_loop
 			}
