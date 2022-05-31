@@ -17,8 +17,9 @@ def main():
     
     giza_folder = os.path.join(results_folder, "22")
     cassandra_folder = os.path.join(results_folder, "19")
-    cholula_folder = os.path.join(results_folder, "23")
+    cholula_folder = os.path.join(results_folder, "21")
 
+# TOdo :Investigate whether order of arguments matters
     #fig 6
     giza_csvs, cassandra_csvs, cholula_csvs = calculate_fig_6_csvs(giza_folder,
                                                                            cassandra_folder,
@@ -29,8 +30,8 @@ def main():
 
 
     os.unlink(giza_csvs)
-    os.unlink(cholula_csvs)
     os.unlink(cassandra_csvs)
+    os.unlink(cholula_csvs)
 
 
 # Returns a tuple of tuple of csv paths.
@@ -43,10 +44,10 @@ def calculate_fig_6_csvs(giza_folder, cassandra_folder, cholula_folder):
 
     # Calculate csvs for each list of latencies.
     giza_cdf_csv, _ = latencies_to_csv(giza_latencies, "giza", "6a-write")
-    giza_contention_cdf_csv, _ = latencies_to_csv(cholula_latencies, "cholula", "6a-write")
     cassandra_cdf_csv, _ = latencies_to_csv(cassandra_latencies, "cassandra", "6a-write")
+    cholula_cdf_csv, _  = latencies_to_csv(cholula_latencies, "cholula", "6a-write")
 
-    return giza_cdf_csv, giza_contention_cdf_csv, cassandra_cdf_csv
+    return giza_cdf_csv, cassandra_cdf_csv, cholula_cdf_csv
 
 if __name__ == "__main__":
     main()
