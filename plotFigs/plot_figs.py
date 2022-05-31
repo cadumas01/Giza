@@ -16,7 +16,7 @@ def main():
 
     
     giza_folder = os.path.join(results_folder, "22")
-    cassandra_folder = os.path.join(results_folder, "19")
+    cassandra_folder = os.path.join(results_folder, "25")
     cholula_folder = os.path.join(results_folder, "21")
 
 # TOdo :Investigate whether order of arguments matters

@@ -50,3 +50,4 @@ Run `python plotFigs/plot_figs.py`. The plots will be generated in `plotFigs/plo
 - results/22 is giza
 - results/23 is cholula (better? >=3)
 - results/24 is cholula ( >= 4)
+- results/25 is cassandra
